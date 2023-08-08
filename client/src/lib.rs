@@ -1,5 +1,10 @@
-use dioxus::{html::input_data::keyboard_types::Key, prelude::*};
+use dioxus::prelude::*;
 use log::info;
+use logic::Board;
+
+pub mod logic;
+use crate::logic::{ChessBoard, PieceKind, Color};
+
 #[derive(PartialEq)]
 pub enum FilterState {
     All,
@@ -7,16 +12,102 @@ pub enum FilterState {
     Completed,
 }
 
-pub type Todos = im_rc::HashMap<u32, TodoItem>;
-
 #[derive(Debug, PartialEq, Clone)]
-pub struct TodoItem {
+pub struct StructExample {
     pub id: u32,
     pub checked: bool,
     pub contents: String,
 }
 
+#[inline_props]
+pub(crate) fn chessboard<'a>(cx: Scope<()>, board: &'a mut ChessBoard) -> Element {
+    cx.render(rsx! {
+        div { class: "board",
+            (0..8).map(|i| {
+                rsx! {
+                    div {
+                        (0..8).map(|j| {
+                            if (i+j) % 2 == 0 {
+                                let class = if board.selected == Some((i,j))  { "square black selected" } else { "square black" };
+                                info!("render: class: {}", class);
+                                rsx! {
+                                    div {   
+                                        class: class,
+                                        onclick: move |_| {
+                                            //info!("Clicked on square {i},{j}");
+                                            //board.select((i,j));
+                                        }
+                                    }
+                                }
+                            } else {
+                                let class = if board.selected == Some((i,j)) { "square selected" } else { "square" };
+                                info!("render: class: {}", class);
+                                rsx! {
+                                    div {   
+                                        class: class,
+                                        onclick: move |_| {
+                                            //info!("Clicked on square {i},{j}");
+                                            //board.select((i,j));
+                                        } 
+                                    }
+                                }
+                            }
+
+                        })
+                    }
+                }
+            })
+        }
+    })
+}
+
+fn populate_board(board:ChessBoard) -> ChessBoard {
+    let mut board = board;
+    board.board[0][0] = Some((PieceKind::Rook, Color::White));
+    board.board[0][1] = Some((PieceKind::Knight, Color::White));
+    board.board[0][2] = Some((PieceKind::Bishop, Color::White));
+    board.board[0][3] = Some((PieceKind::Queen, Color::White));
+    board.board[0][4] = Some((PieceKind::King, Color::White));
+    board.board[0][5] = Some((PieceKind::Bishop, Color::White));
+    board.board[0][6] = Some((PieceKind::Knight, Color::White));
+    board.board[0][7] = Some((PieceKind::Rook, Color::White));
+    for n in 0..8 {
+        board.board[1][n] = Some((PieceKind::Pawn, Color::White));
+    }
+
+    board.board[7][0] = Some((PieceKind::Rook, Color::Black));
+    board.board[7][1] = Some((PieceKind::Knight, Color::Black));
+    board.board[7][2] = Some((PieceKind::Bishop, Color::Black));
+    board.board[7][3] = Some((PieceKind::Queen, Color::Black));
+    board.board[7][4] = Some((PieceKind::King, Color::Black));
+    board.board[7][5] = Some((PieceKind::Bishop, Color::Black));
+    board.board[7][6] = Some((PieceKind::Knight, Color::Black));
+    board.board[7][7] = Some((PieceKind::Rook, Color::Black));
+    for n in 0..8 {
+        board.board[6][n] = Some((PieceKind::Pawn, Color::Black));
+    }
+    return board;
+}
+
 pub fn app(cx: Scope<()>) -> Element {
+    let selected_square = use_state(cx, || (-1,-1));
+    let mut matrix: Board = vec![];
+    for _ in 0..8 {
+        let mut row: Vec<Option<(PieceKind,Color)>> = vec![];
+        row.resize(8, None);
+        matrix.push(row);
+    }
+
+    let mut board = ChessBoard {
+        board: matrix,
+        moves: vec![],
+        selected: None,
+        turn: logic::Color::White,
+        game_over: false,
+    };
+
+    board = populate_board(board);
+    
     cx.render(rsx! {
         section { class: "whole",
             style { include_str!("../src/style.css") }
@@ -28,16 +119,28 @@ pub fn app(cx: Scope<()>) -> Element {
                             div {
                                 (0..8).map(|j| {
                                     if (i+j) % 2 == 0 {
+                                        let class = if selected_square.get().0 == i && selected_square.get().1 == j  { "square black selected" } else { "square black" };
+                                        info!("render: class: {}", class);
                                         rsx! {
-                                            div { class: "square black",
+                                            div {   
+                                                class: class,
                                                 onclick: move |_| {
-                                                    info!("Clicked on square {i},{j}");
+                                                    //info!("Clicked on square {i},{j}");
+                                                    selected_square.set((i,j));
                                                 }
-                                         }
+                                            }
                                         }
                                     } else {
+                                        let class = if selected_square.get().0 == i && selected_square.get().1 == j { "square selected" } else { "square" };
+                                        info!("render: class: {}", class);
                                         rsx! {
-                                            div { class: "square" }
+                                            div {   
+                                                class: class,
+                                                onclick: move |_| {
+                                                    //info!("Clicked on square {i},{j}");
+                                                    selected_square.set((i,j));
+                                                } 
+                                            }
                                         }
                                     }
 
@@ -53,57 +156,11 @@ pub fn app(cx: Scope<()>) -> Element {
 }
 
 #[derive(Props)]
-pub struct TodoEntryProps<'a> {
-    set_todos: &'a UseRef<Todos>,
+pub struct ExampleProps<'a> {
+    set_todos: &'a UseRef<StructExample>,
     id: u32,
 }
 
-pub fn todo_entry<'a>(cx: Scope<'a, TodoEntryProps<'a>>) -> Element {
-    let editing = use_state(cx, || false);
-
-    let todos = cx.props.set_todos.read();
-    let todo = &todos[&cx.props.id];
-    let is_checked = todo.checked;
-    let completed = if is_checked { "completed" } else { "" };
-    let is_editing = (**editing).then_some("editing").unwrap_or_default();
-
-    render!(
-        li {
-            class: "{completed} {is_editing}",
-            onclick: move |_| {
-                if !is_checked {
-                    editing.set(true)
-                }
-            },
-            onfocusout: move |_| editing.set(false),
-            div { class: "view",
-                input {
-                    class: "toggle",
-                    r#type: "checkbox",
-                    id: "cbg-{todo.id}",
-                    checked: "{is_checked}",
-                    onchange: move |evt| {
-                        cx.props.set_todos.write()[&cx.props.id].checked = evt.value.parse().unwrap();
-                    }
-                }
-                label { r#for: "cbg-{todo.id}", pointer_events: "none", "{todo.contents}" }
-            }
-            if **editing {
-            rsx!{
-                input {
-                    class: "edit",
-                    value: "{todo.contents}",
-                    oninput: move |evt| cx.props.set_todos.write()[&cx.props.id].contents = evt.value.clone(),
-                    autofocus: "true",
-                    onkeydown: move |evt| {
-                        match evt.key().to_string().as_str() {
-                            "Enter" | "Escape" | "Tab" => editing.set(false),
-                            _ => {}
-                        }
-                    },
-                }
-            }
-        }
-        }
-    )
+pub fn todo_entry<'a>(cx: Scope<'a, ExampleProps<'a>>) -> Element {
+    render!( li { "allo" } )
 }
