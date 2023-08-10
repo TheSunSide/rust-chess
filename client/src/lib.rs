@@ -89,8 +89,41 @@ fn populate_board(board:ChessBoard) -> ChessBoard {
     return board;
 }
 
-pub fn app(cx: Scope<()>) -> Element {
-    let selected_square = use_state(cx, || (-1,-1));
+
+fn activate_selected_color(i: u8, j: u8, selected: bool, class: &mut String)  {
+    if (i+j) % 2 == 0 {
+        class.push_str(" black");
+    }
+
+    if(selected) {
+        class.push_str(" selected");
+    }
+}
+
+#[derive(PartialEq,Props)]
+pub struct SquareProps<'a> {
+    position: (u8,u8),
+    board: &'a ChessBoard,
+}
+
+pub fn square<'a>(cx: Scope<SquareProps<'a>>) -> Element<'a> {
+    let mut class = String::from("square");
+    let (i,j) = cx.props.position;
+    let selected = cx.props.board.selected == Some((i,j));
+    activate_selected_color(i,j,selected, &mut class);
+    cx.render(rsx! {
+        div {
+            class: class,
+            onclick: move |_| {
+                info!("Clicked on square {i},{j}");
+                cx.props.board.select((i, j));
+            }
+        }
+    })
+} 
+
+pub fn app<'a>(cx: Scope<'a,()>) -> Element {
+    let selected_square: &UseState<Option<(usize, usize)>> = use_state(cx, || None);
     let mut matrix: Board = vec![];
     for _ in 0..8 {
         let mut row: Vec<Option<(PieceKind,Color)>> = vec![];
@@ -118,32 +151,14 @@ pub fn app(cx: Scope<()>) -> Element {
                         rsx! {
                             div {
                                 (0..8).map(|j| {
-                                    if (i+j) % 2 == 0 {
-                                        let class = if selected_square.get().0 == i && selected_square.get().1 == j  { "square black selected" } else { "square black" };
-                                        info!("render: class: {}", class);
-                                        rsx! {
-                                            div {   
-                                                class: class,
-                                                onclick: move |_| {
-                                                    //info!("Clicked on square {i},{j}");
-                                                    selected_square.set((i,j));
-                                                }
-                                            }
-                                        }
-                                    } else {
-                                        let class = if selected_square.get().0 == i && selected_square.get().1 == j { "square selected" } else { "square" };
-                                        info!("render: class: {}", class);
-                                        rsx! {
-                                            div {   
-                                                class: class,
-                                                onclick: move |_| {
-                                                    //info!("Clicked on square {i},{j}");
-                                                    selected_square.set((i,j));
-                                                } 
-                                            }
+                                    rsx! {
+                                        square {
+                                            position: (i,j),
+                                            board: &board,
+                                            href: "#",
                                         }
                                     }
-
+                                    
                                 })
                             }
                         }
