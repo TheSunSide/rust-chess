@@ -21,6 +21,16 @@ pub(crate) struct ChessBoard {
 }
 
 impl ChessBoard {
+    pub(crate) fn new(board: Board) -> Self {
+        Self {
+            board,
+            moves: vec![],
+            selected: None,
+            turn: Color::White,
+            game_over: false,
+        }
+    }
+
     pub(crate) fn select(&mut self, square: Square) {
         self.selected = Some(square);
     }

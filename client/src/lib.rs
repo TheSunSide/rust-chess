@@ -35,7 +35,7 @@ pub(crate) fn chessboard<'a>(cx: Scope<()>, board: &'a mut ChessBoard) -> Elemen
                                         class: class,
                                         onclick: move |_| {
                                             //info!("Clicked on square {i},{j}");
-                                            //board.select((i,j));
+                                            board.select((i,j));
                                         }
                                     }
                                 }
@@ -47,7 +47,7 @@ pub(crate) fn chessboard<'a>(cx: Scope<()>, board: &'a mut ChessBoard) -> Elemen
                                         class: class,
                                         onclick: move |_| {
                                             //info!("Clicked on square {i},{j}");
-                                            //board.select((i,j));
+                                            board.select((i,j));
                                         } 
                                     }
                                 }
@@ -61,59 +61,60 @@ pub(crate) fn chessboard<'a>(cx: Scope<()>, board: &'a mut ChessBoard) -> Elemen
     })
 }
 
-fn populate_board(board:ChessBoard) -> ChessBoard {
-    let mut board = board;
-    board.board[0][0] = Some((PieceKind::Rook, Color::White));
-    board.board[0][1] = Some((PieceKind::Knight, Color::White));
-    board.board[0][2] = Some((PieceKind::Bishop, Color::White));
-    board.board[0][3] = Some((PieceKind::Queen, Color::White));
-    board.board[0][4] = Some((PieceKind::King, Color::White));
-    board.board[0][5] = Some((PieceKind::Bishop, Color::White));
-    board.board[0][6] = Some((PieceKind::Knight, Color::White));
-    board.board[0][7] = Some((PieceKind::Rook, Color::White));
+fn populate_board<'a>(board: &'a mut Board) {
+    board[0][0] = Some((PieceKind::Rook, Color::White));
+    board[0][1] = Some((PieceKind::Knight, Color::White));
+    board[0][2] = Some((PieceKind::Bishop, Color::White));
+    board[0][3] = Some((PieceKind::Queen, Color::White));
+    board[0][4] = Some((PieceKind::King, Color::White));
+    board[0][5] = Some((PieceKind::Bishop, Color::White));
+    board[0][6] = Some((PieceKind::Knight, Color::White));
+    board[0][7] = Some((PieceKind::Rook, Color::White));
     for n in 0..8 {
-        board.board[1][n] = Some((PieceKind::Pawn, Color::White));
+        board[1][n] = Some((PieceKind::Pawn, Color::White));
     }
 
-    board.board[7][0] = Some((PieceKind::Rook, Color::Black));
-    board.board[7][1] = Some((PieceKind::Knight, Color::Black));
-    board.board[7][2] = Some((PieceKind::Bishop, Color::Black));
-    board.board[7][3] = Some((PieceKind::Queen, Color::Black));
-    board.board[7][4] = Some((PieceKind::King, Color::Black));
-    board.board[7][5] = Some((PieceKind::Bishop, Color::Black));
-    board.board[7][6] = Some((PieceKind::Knight, Color::Black));
-    board.board[7][7] = Some((PieceKind::Rook, Color::Black));
+    board[7][0] = Some((PieceKind::Rook, Color::Black));
+    board[7][1] = Some((PieceKind::Knight, Color::Black));
+    board[7][2] = Some((PieceKind::Bishop, Color::Black));
+    board[7][3] = Some((PieceKind::Queen, Color::Black));
+    board[7][4] = Some((PieceKind::King, Color::Black));
+    board[7][5] = Some((PieceKind::Bishop, Color::Black));
+    board[7][6] = Some((PieceKind::Knight, Color::Black));
+    board[7][7] = Some((PieceKind::Rook, Color::Black));
     for n in 0..8 {
-        board.board[6][n] = Some((PieceKind::Pawn, Color::Black));
+        board[6][n] = Some((PieceKind::Pawn, Color::Black));
     }
-    return board;
 }
 
 
-fn activate_selected_color(i: u8, j: u8, selected: bool, class: &mut String)  {
+fn activate_selected_color(i: u8, j: u8, selected: bool) -> String  {
+    let mut class = "square".to_string();
     if (i+j) % 2 == 0 {
         class.push_str(" black");
     }
 
-    if(selected) {
+    if selected {
         class.push_str(" selected");
     }
+    return class;
 }
 
 #[derive(PartialEq,Props)]
 pub struct SquareProps<'a> {
     position: (u8,u8),
-    board: &'a ChessBoard,
+    board: &'a mut ChessBoard,
 }
 
-pub fn square<'a>(cx: Scope<SquareProps<'a>>) -> Element<'a> {
-    let mut class = String::from("square");
+#[allow(non_snake_case)]
+pub fn Square<'a>(cx: Scope<'a,SquareProps<'a>>) -> Element<'a> {
+    let mut class: &UseState<String> = use_state(cx, || String::new());
     let (i,j) = cx.props.position;
-    let selected = cx.props.board.selected == Some((i,j));
-    activate_selected_color(i,j,selected, &mut class);
+    let selected: bool = cx.props.board.selected == Some((i,j));
+    class.set(activate_selected_color(i,j,selected));
     cx.render(rsx! {
         div {
-            class: class,
+            class: "{class}",
             onclick: move |_| {
                 info!("Clicked on square {i},{j}");
                 cx.props.board.select((i, j));
@@ -123,7 +124,7 @@ pub fn square<'a>(cx: Scope<SquareProps<'a>>) -> Element<'a> {
 } 
 
 pub fn app<'a>(cx: Scope<'a,()>) -> Element {
-    let selected_square: &UseState<Option<(usize, usize)>> = use_state(cx, || None);
+    //let selected_square: &UseState<Option<(usize, usize)>> = use_state(cx, || None);
     let mut matrix: Board = vec![];
     for _ in 0..8 {
         let mut row: Vec<Option<(PieceKind,Color)>> = vec![];
@@ -131,16 +132,10 @@ pub fn app<'a>(cx: Scope<'a,()>) -> Element {
         matrix.push(row);
     }
 
-    let mut board = ChessBoard {
-        board: matrix,
-        moves: vec![],
-        selected: None,
-        turn: logic::Color::White,
-        game_over: false,
-    };
-
-    board = populate_board(board);
-    
+    let mut board:&UseRef<ChessBoard> = use_ref(cx, || (ChessBoard::new(matrix)));
+    let read = board.read();
+    board.with_mut(|b| populate_board(&mut b.board));
+    board.
     cx.render(rsx! {
         section { class: "whole",
             style { include_str!("../src/style.css") }
@@ -152,10 +147,9 @@ pub fn app<'a>(cx: Scope<'a,()>) -> Element {
                             div {
                                 (0..8).map(|j| {
                                     rsx! {
-                                        square {
+                                        Square {
                                             position: (i,j),
-                                            board: &board,
-                                            href: "#",
+                                            board: (&mut board),
                                         }
                                     }
                                     
