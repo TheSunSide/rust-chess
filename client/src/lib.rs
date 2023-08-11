@@ -137,7 +137,8 @@ pub fn Square(cx: Scope<SquareProps>) -> Element {
             onclick: move |_| {
                 info!("Clicked on square {i},{j}");
                 cx.props.board.write().select((i, j));
-            }
+            },
+            Piece { board: cx.props.board.clone(), position: (i, j) }
         }
     })
 }
