@@ -1,9 +1,9 @@
+use data::Board;
 use dioxus::prelude::*;
 use log::info;
-use logic::Board;
 
-pub mod logic;
-use crate::logic::{ChessBoard, Color, PieceKind};
+pub mod data;
+use crate::data::{ChessBoard, Color, PieceKind};
 
 #[derive(PartialEq)]
 pub enum FilterState {
