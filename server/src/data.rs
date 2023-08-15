@@ -64,12 +64,12 @@ impl ChessBoard {
             PieceKind::Pawn => {
                 let mut moves = vec![];
                 if piece.1 == Color::White {
-                    if x == 1 {
+                    if x == 1 && self.board[2][y as usize].is_none() {
                         moves.push((x + 2, y));
                     }
                     moves.push((x + 1, y));
                 } else {
-                    if x == 6 {
+                    if x == 6 && self.board[5][y as usize].is_none() {
                         moves.push((x - 2, y));
                     }
                     moves.push((x - 1, y));
@@ -88,118 +88,122 @@ impl ChessBoard {
                 moves.push((x - 1, y - 2));
                 moves
             }
-            PieceKind::Bishop => {
-                let mut moves = vec![];
-                for i in 1..8 {
-                    if x + i > 7 || y + i > 7 {
-                        break;
-                    }
-                    moves.push((x + i, y + i));
-                }
-                for i in 1..8 {
-                    if x + i > 7 || y - i < 0 {
-                        break;
-                    }
-                    moves.push((x + i, y - i));
-                }
-                for i in 1..8 {
-                    if x - i < 0 || y + i > 7 {
-                        break;
-                    }
-                    moves.push((x - i, y + i));
-                }
-                for i in 1..8 {
-                    if x - i < 0 || y - i < 0 {
-                        break;
-                    }
-                    moves.push((x - i, y - i));
-                }
-                moves
-            }
-            PieceKind::Rook => {
-                let mut moves = vec![];
-                moves.append(&mut get_moves_line(square));
-                moves
-            }
+            PieceKind::Bishop => self.get_moves_diagonal(square),
+            PieceKind::Rook => self.get_moves_line(square),
             PieceKind::Queen => {
                 let mut moves = vec![];
-                moves.append(&mut get_moves_line(square));
-                moves.append(&mut get_moves_diagonal(square));
+                moves.append(&mut self.get_moves_line(square));
+                moves.append(&mut self.get_moves_diagonal(square));
                 moves
             }
-            PieceKind::King => {
-                let mut moves = vec![];
-                moves.push((x + 1, y));
-                moves.push((x - 1, y));
-                moves.push((x, y + 1));
-                moves.push((x, y - 1));
-                moves.push((x + 1, y + 1));
-                moves.push((x + 1, y - 1));
-                moves.push((x - 1, y + 1));
-                moves.push((x - 1, y - 1));
-                moves
-            }
+            PieceKind::King => get_king_moves(square),
         };
+        moves
+    }
+
+    fn get_moves_line(&self, from: Square) -> Vec<Square> {
+        let (x, y) = from;
+        let mut moves = vec![];
+        for i in 1..8 {
+            if x + i > 7 {
+                break;
+            }
+            moves.push((x + i, y));
+            if self.board[x as usize + i as usize as usize][y as usize].is_some() {
+                break;
+            }
+        }
+        for i in 1..8 {
+            if x < i {
+                break;
+            }
+            moves.push((x - i, y));
+            if self.board[x as usize - i as usize as usize][y as usize].is_some() {
+                break;
+            }
+        }
+        for i in 1..8 {
+            if y + i > 7 {
+                break;
+            }
+            moves.push((x, y + i));
+            if self.board[x as usize][y as usize + i as usize as usize].is_some() {
+                break;
+            }
+        }
+        for i in 1..8 {
+            if y < i {
+                break;
+            }
+            moves.push((x, y - i));
+            if self.board[x as usize][y as usize - i as usize as usize].is_some() {
+                break;
+            }
+        }
+        moves
+    }
+    fn get_moves_diagonal(&self, from: Square) -> Vec<Square> {
+        let (x, y) = from;
+        let mut moves = vec![];
+        for i in 1..8 {
+            if x + i > 7 || y + i > 7 {
+                break;
+            }
+            moves.push((x + i, y + i));
+            if self.board[x as usize + i as usize as usize][y as usize + i as usize as usize]
+                .is_some()
+            {
+                break;
+            }
+        }
+        for i in 1..8 {
+            if x + i > 7 || y < i {
+                break;
+            }
+            moves.push((x + i, y - i));
+            if self.board[x as usize + i as usize as usize][y as usize - i as usize as usize]
+                .is_some()
+            {
+                break;
+            }
+        }
+        for i in 1..8 {
+            if x < i || y + i > 7 {
+                break;
+            }
+            moves.push((x - i, y + i));
+            if self.board[x as usize - i as usize as usize][y as usize + i as usize as usize]
+                .is_some()
+            {
+                break;
+            }
+        }
+        for i in 1..8 {
+            if x < i || y < i {
+                break;
+            }
+            moves.push((x - i, y - i));
+            if self.board[x as usize - i as usize as usize][y as usize - i as usize as usize]
+                .is_some()
+            {
+                break;
+            }
+        }
         moves
     }
 }
 
-fn get_moves_line(from: Square) -> Vec<Square> {
+fn get_king_moves(from: Square) -> Vec<Square> {
     let (x, y) = from;
     let mut moves = vec![];
-    for i in 1..8 {
-        if x + i > 7 {
-            break;
-        }
-        moves.push((x + i, y));
-    }
-    for i in 1..8 {
-        if x - i < 0 {
-            break;
-        }
-        moves.push((x - i, y));
-    }
-    for i in 1..8 {
-        if y + i > 7 {
-            break;
-        }
-        moves.push((x, y + i));
-    }
-    for i in 1..8 {
-        if y - i < 0 {
-            break;
-        }
-        moves.push((x, y - i));
-    }
-    moves
-}
-fn get_moves_diagonal(from: Square) -> Vec<Square> {
-    let (x, y) = from;
-    let mut moves = vec![];
-    for i in 1..8 {
-        if x + i > 7 || y + i > 7 {
-            break;
-        }
-        moves.push((x + i, y + i));
-    }
-    for i in 1..8 {
-        if x + i > 7 || y - i < 0 {
-            break;
-        }
-        moves.push((x + i, y - i));
-    }
-    for i in 1..8 {
-        if x - i < 0 || y + i > 7 {
-            break;
-        }
-        moves.push((x - i, y + i));
-    }
-    for i in 1..8 {
-        if x - i < 0 || y - i < 0 {
-            break;
-        }
-        moves.push((x - i, y - i));
-    }
+    moves.push((x + 1, y));
+    moves.push((x - 1, y));
+    moves.push((x, y + 1));
+    moves.push((x, y - 1));
+    moves.push((x + 1, y + 1));
+    moves.push((x + 1, y - 1));
+    moves.push((x - 1, y + 1));
+    moves.push((x - 1, y - 1));
     moves
 }
 

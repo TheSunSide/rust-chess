@@ -19,6 +19,7 @@ async fn new_lobby(
 ) -> impl Responder {
     let mut lobbies = lobbies.lobbies.lock().unwrap();
     let mut new_lobby = specs::ChessGame::new(data::Color::White);
+    new_lobby.load_new();
     new_lobby.player1 = body.to_string();
     let id = uuid::Uuid::new_v4().to_string();
     new_lobby.id = id.clone();
