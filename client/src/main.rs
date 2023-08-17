@@ -8,5 +8,5 @@ mod data;
 
 pub fn main() {
     dioxus_logger::init(LevelFilter::Info).expect("failed to init logger");
-    dioxus_web::launch(app);
+    dioxus_web::launch(Render);
 }

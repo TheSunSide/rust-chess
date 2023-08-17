@@ -1,5 +1,6 @@
 use data::Board;
 use dioxus::prelude::*;
+use dioxus_router::prelude::*;
 use log::info;
 
 pub mod data;
@@ -132,7 +133,8 @@ pub fn Square(cx: Scope<SquareProps>) -> Element {
     })
 }
 
-pub fn app<'a>(cx: Scope<'a, ()>) -> Element {
+#[allow(non_snake_case)]
+pub fn ChessApp<'a>(cx: Scope<'a, ()>) -> Element {
     let mut matrix: Board = vec![];
     for _ in 0..8 {
         let mut row: Vec<Option<(PieceKind, Color)>> = vec![];
@@ -157,3 +159,34 @@ pub fn app<'a>(cx: Scope<'a, ()>) -> Element {
         footer { class: "info", p { "A footer" } }
     })
 }
+
+#[allow(non_snake_case)]
+pub fn LobbyApp<'a>(cx: Scope<'a, ()>) -> Element {
+    cx.render(rsx! {
+        div {
+            h1 { "Test" }
+            p { "This is a test" }
+        }
+    })
+}
+
+#[allow(non_snake_case)]
+pub fn Render(cx: Scope) -> Element {
+    render! {
+        Router::<Route> {}
+    }
+}
+
+
+// ANCHOR: router
+#[derive(Routable, Clone)]
+#[rustfmt::skip]
+enum Route {
+    #[route("/game")]
+    ChessApp {},
+    #[route("/")]
+    LobbyApp {},
+
+}
+// ANCHOR_END: router
+
