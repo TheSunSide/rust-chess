@@ -6,14 +6,15 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-dioxus = "0.4.0"
-dioxus-web = "0.4.0"
+dioxus = { git = "https://github.com/dioxuslabs/dioxus" }
+dioxus-web = { git = "https://github.com/dioxuslabs/dioxus" }
 wasm-logger = "0.2.0"
 wasm-bindgen = "0.2.78"
+fermi = { git = "https://github.com/dioxuslabs/dioxus" }
 log = "0.4.14"
 console_error_panic_hook = "*"
 im-rc = "15.0.0"
 dioxus-logger = "0.4.1"
 serde = "1.0.183"
-dioxus-router = "0.4.1"
+dioxus-router = { git = "https://github.com/dioxuslabs/dioxus" }
 dioxus-websocket-hooks = "0.0.2"

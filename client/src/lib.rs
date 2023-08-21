@@ -6,13 +6,6 @@ use log::info;
 pub mod data;
 use crate::data::{ChessBoard, Color, PieceKind};
 
-#[derive(PartialEq)]
-pub enum FilterState {
-    All,
-    Active,
-    Completed,
-}
-
 #[derive(Debug, PartialEq, Clone)]
 pub struct StructExample {
     pub id: u32,
