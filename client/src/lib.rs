@@ -166,23 +166,33 @@ pub async fn get_lobbies() -> Result<Vec<ChessGame>, reqwest::Error> {
     info!("Lobbies: {:?}", lobbies);
     Ok(lobbies)
 }
+
 #[derive(PartialEq, Props)]
 pub struct GameProps {
     game: ChessGame
 }
+
 #[allow(non_snake_case)]
 pub fn Lobby (cx: Scope<GameProps>) -> Element {
     cx.render(rsx! {
         div {
             class: "lobby-square",
             "{cx.props.game.id}"
+            button {
+                "Join"
+            }
         }
+
     })
 }
 
 #[allow(non_snake_case)]
 pub fn Lobbies<'a>(cx: Scope<'a, ()>) -> Element {
+    // Check coroutine https://dioxuslabs.com/learn/0.3/async/use_coroutine.html
     let lobbies = use_future(cx, (), |_| get_lobbies());
+    // let lobbies2 = use_coroutine(cx, |_| {
+        //update lobbies here
+    // });
     match lobbies.value() {
         Some(Ok(list)) => {
             // if it is, render the stories
@@ -210,11 +220,22 @@ pub fn Lobbies<'a>(cx: Scope<'a, ()>) -> Element {
 #[allow(non_snake_case)]
 pub fn LobbyApp<'a>(cx: Scope<'a, ()>) -> Element {
     cx.render(rsx! {
-        div {
+        head {
+            style { include_str!("../src/style.css") }
+        }
+        section {
             h1 { "Test" }
             p { "This is a test" }
             h2 { "Lobbies"}
             Lobbies {}
+            h2 { "Create a lobby" }
+            label { "Username" }
+            input {
+
+            }
+            button {
+                "Create"
+            }
         }
     })
 }
