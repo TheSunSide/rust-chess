@@ -71,3 +71,13 @@ body {
   object-fit: contain;
   background: transparent;
 }
+
+.lobby-square {
+  width: 100px;
+  height: 100px;
+  background-color: wheat;
+  border: #4d4d4d 1px solid;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

@@ -174,6 +174,7 @@ pub struct GameProps {
 pub fn Lobby (cx: Scope<GameProps>) -> Element {
     cx.render(rsx! {
         div {
+            class: "lobby-square",
             "{cx.props.game.id}"
         }
     })
@@ -212,6 +213,7 @@ pub fn LobbyApp<'a>(cx: Scope<'a, ()>) -> Element {
         div {
             h1 { "Test" }
             p { "This is a test" }
+            h2 { "Lobbies"}
             Lobbies {}
         }
     })

@@ -1,6 +1,6 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder, http};
 use std::sync::Mutex;
-
+use actix_cors::Cors;
 use crate::specs::{JoinLobby, UpdateReq};
 
 
@@ -128,8 +128,19 @@ async fn main() -> std::io::Result<()> {
     });
 
     HttpServer::new(move || {
+        let cors = Cors::default()
+        //.allowed_origin("localhost")
+        .allow_any_origin()
+        // .allowed_origin_fn(|origin, _req_head| {
+        //     origin.as_bytes().ends_with(b".rust-lang.org")
+        // })
+        .allowed_methods(vec!["GET", "POST"])
+        .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
+        .allowed_header(http::header::CONTENT_TYPE)
+        .max_age(3600);
         // move counter into the closure
         App::new()
+            .wrap(cors)
             .app_data(counter.clone())
             .app_data(lobbies.clone()) // <- registers the created data
             .route("/", web::get().to(example_get))
