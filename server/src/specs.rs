@@ -17,6 +17,11 @@ pub struct MoveChessPiece {
 }
 
 #[derive(Deserialize, Serialize, PartialEq, Clone, Debug, Default)]
+pub struct UpdateReq {
+    pub id: String,
+}
+
+#[derive(Deserialize, Serialize, PartialEq, Clone, Debug, Default)]
 pub struct ChessGame {
     pub id: String,
     pub board: ChessBoard,

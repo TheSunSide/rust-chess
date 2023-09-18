@@ -1,7 +1,9 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use std::sync::Mutex;
 
-use crate::specs::JoinLobby;
+use crate::specs::{JoinLobby, UpdateReq};
+
+
 
 mod data;
 mod specs;
@@ -86,11 +88,28 @@ async fn get_lobbies(lobbies: web::Data<specs::LobbiesMutex>) -> impl Responder 
     HttpResponse::Ok().json(&*lobbies)
 }
 
+#[get("/update")]
+async fn get_update(
+    lobbies: web::Data<specs::LobbiesMutex>,
+    body: web::Json<UpdateReq>
+) -> impl Responder {
+    let lobbies_vec = lobbies.lobbies.lock().unwrap();
+    let lobby = lobbies_vec.iter().find(|lobby| lobby.id == body.id.to_string());
+    match lobby {
+        Some(lobby) => {
+            return HttpResponse::Ok().json(lobby);
+        }
+        None => {
+            return HttpResponse::Ok().body(format!("Lobby {} not found!", body.id));
+        }
+    }
+}
+
 struct AppStateWithCounter {
     counter: Mutex<i32>, // <- Mutex is necessary to mutate safely across threads
 }
 
-async fn index(data: web::Data<AppStateWithCounter>) -> String {
+async fn example_get(data: web::Data<AppStateWithCounter>) -> String {
     let mut counter = data.counter.lock().unwrap(); // <- get counter's MutexGuard
     *counter += 1; // <- access counter inside MutexGuard
 
@@ -104,14 +123,20 @@ async fn main() -> std::io::Result<()> {
         lobbies: Mutex::new(vec![]),
     });
 
+    let counter = web::Data::new(AppStateWithCounter {
+        counter: Mutex::new(0),
+    });
+
     HttpServer::new(move || {
         // move counter into the closure
         App::new()
-            .app_data(lobbies.clone()) // <- register the created data
-            .route("/", web::get().to(index))
+            .app_data(counter.clone())
+            .app_data(lobbies.clone()) // <- registers the created data
+            .route("/", web::get().to(example_get))
             .service(new_lobby)
             .service(get_lobbies)
             .service(join_lobby)
+            .service(get_update)
     })
     .bind(("127.0.0.1", 8080))?
     .run()

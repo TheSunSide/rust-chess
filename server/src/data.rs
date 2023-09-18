@@ -53,6 +53,8 @@ impl ChessBoard {
         self.selected = Some(square);
     }
 
+    /** Doesn't check if the color is the right one
+     */
     pub fn get_moves(&self, square: Square) -> Vec<Square> {
         let (x, y) = square;
         let piece = self.board[x as usize][y as usize].clone();
