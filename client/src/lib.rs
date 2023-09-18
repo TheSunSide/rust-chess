@@ -1,7 +1,9 @@
-use data::Board;
+use data::{Board, ChessGame};
 use dioxus::prelude::*;
 use dioxus_router::prelude::*;
 use log::info;
+
+//use futures::future::join_all;
 
 pub mod data;
 use crate::data::{ChessBoard, Color, PieceKind};
@@ -153,12 +155,64 @@ pub fn ChessApp<'a>(cx: Scope<'a, ()>) -> Element {
     })
 }
 
+pub static BASE_API_URL: &str = "http://localhost:8090";
+pub static LOBBIES_API: &str = "/lobbies";
+pub static USER_API: &str = "/user";
+
+pub async fn get_lobbies() -> Result<Vec<ChessGame>, reqwest::Error> {
+    let url = format!("{}{}", BASE_API_URL,LOBBIES_API);
+    info!("URL: {}", url);
+    let lobbies = reqwest::get(&url).await?.json::<Vec<ChessGame>>().await?;
+    info!("Lobbies: {:?}", lobbies);
+    Ok(lobbies)
+}
+#[derive(PartialEq, Props)]
+pub struct GameProps {
+    game: ChessGame
+}
+#[allow(non_snake_case)]
+pub fn Lobby (cx: Scope<GameProps>) -> Element {
+    cx.render(rsx! {
+        div {
+            "{cx.props.game.id}"
+        }
+    })
+}
+
+#[allow(non_snake_case)]
+pub fn Lobbies<'a>(cx: Scope<'a, ()>) -> Element {
+    let lobbies = use_future(cx, (), |_| get_lobbies());
+    match lobbies.value() {
+        Some(Ok(list)) => {
+            // if it is, render the stories
+            render! {
+                div {
+                    // iterate over the stories with a for loop
+                    list.iter().map(|game| {
+                        render!( Lobby { game: game.clone() })
+                    })
+                }
+            }
+        }
+        Some(Err(err)) => {
+            // if there was an error, render the error
+            render! {"An error occurred while fetching stories {err}"}
+        }
+        None => {
+            // if the future is not resolved yet, render a loading message
+            render! {"Loading items"}
+        }
+    }
+}
+
+
 #[allow(non_snake_case)]
 pub fn LobbyApp<'a>(cx: Scope<'a, ()>) -> Element {
     cx.render(rsx! {
         div {
             h1 { "Test" }
             p { "This is a test" }
+            Lobbies {}
         }
     })
 }

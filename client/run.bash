@@ -1,1 +1,1 @@
-dx serve --hot-reload
+dx serve --hot-reload --port 4040
