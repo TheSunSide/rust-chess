@@ -19,6 +19,5 @@ im-rc = "15.0.0"
 dioxus-logger = "0.4.1"
 serde = "1.0.183"
 dioxus-router = { git = "https://github.com/dioxuslabs/dioxus" }
-dioxus-websocket-hooks = "0.0.2"
 reqwest = { version = "0.11.20", features = ["json"] }
 futures = "0.3"
